@@ -1,17 +1,23 @@
+/*
+ * @Author: dfh
+ * @Date: 2021-03-04 08:58:14
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-04 10:56:20
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/src/index.js
+ */
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { HashRouter as Router, Route } from './react-router-dom'
+import Home from './components/Home';
+import Profile from './components/Profile';
+import User from './components/User';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+  <Router>
+    <Route path='/' component={Home} exact />
+    <Route path='/user' component={User} exact />
+    <Route path='/profile' component={Profile} exact />
+  </Router>
+  , document.getElementById('root')
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

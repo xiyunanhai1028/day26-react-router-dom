@@ -1,70 +1,157 @@
-# Getting Started with Create React App
+<!--
+ * @Author: dfh
+ * @Date: 2021-03-04 08:58:14
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-04 09:38:01
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/README.md
+-->
+<!--
+ * @Author: dfh
+ * @Date: 2021-03-04 08:58:14
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-04 09:29:55
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/README.md
+-->
+## react-router-dom
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### 1.React路由原理
+- 不同的路径渲染不同的组件
+- 有两种实现方式
+    - HashRouter：利用hash实现路由切换
+    - BrowserRouter：H5 API实现路由切换
 
-## Available Scripts
+#### 1.1.hash路由
+> 利用hash实现路由切换
 
-In the project directory, you can run:
+- hashchange：用来监听hash路由改变
+- window.location.hash.slice(1)：用来获取路径
 
-### `yarn start`
+![hash](/Users/dufeihu/Documents/html/zhufeng/复习/day26-react-router-dom/hash.gif)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```html
+<!DOCTYPE html>
+<html lang="en">
 
-### `yarn test`
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+<body>
+    <div id="root"></div>
+    <ul>
+        <li><a href="#/a">a</a></li>
+        <li><a href="#/b">b</a></li>
+    </ul>
+    <script>
+      //用来监听hash路由改变
+        window.addEventListener('hashchange', () => {
+            console.log(window.location.hash);
+            const pathname = window.location.hash.slice(1);//把#删除
+            document.getElementById('root').innerHTML = pathname;
+        })
+    </script>
+</body>
 
-### `yarn build`
+</html>
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### 1.2.history路由
+> 利用H5 API实现路由切换
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- HTML5规范给我们提供了一个[history](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/history)接口
+- HTML5 History API包括2个方法：`history.pushState()`和`history.replaceState()`，和1个事件`window.onpopstate`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### 1.2.1.pushState
 
-### `yarn eject`
+> history.pushState(state, title,url)，包含三个参数
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- state：用于存储该url对应的状态对象，该对象可在onpopstate事件中获取，也可以在history对象中获取
+- title：标题，目前浏览器未实现
+- url：设置的url地址
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### 1.2.2.replaceState
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- 该接口与pushState参数相同，含义相同
+- 唯一的区别在于`replaceState`是替换浏览器历史堆栈的当前历史记录为设定`url`
+- 需要注意的是`replaceState`不会改动浏览器历史堆栈的当前指针
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+#### 1.2.3.onpopstate
 
-## Learn More
+- 该事件是window属性
+- 该事件会在调用浏览器的前进，后退以及执行`history.forward`，`history.back`，`history.go`触发，因为这个操作有一个共性，即修改了历史堆栈的当前指针
+- 在不改变`document`的前提下，一旦当前指针改变则会触发`onpopstate`事件
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 2.基本使用
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+> React17为什么可以不使用`import react from 'react'`还可以使用？
+>
+> - React17之前：`React.createElement`
+> - React17之后：`require('react/js-runtime')`
 
-### Code Splitting
+```javascript
+├── components
+│   ├── Home.js
+│   ├── Profile.js
+│   └── User.js
+└── index.js
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### 2.1.安装
 
-### Analyzing the Bundle Size
+```javascript
+npm install react-router-dom -S
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+#### 2.2.`src/index.js`
 
-### Making a Progressive Web App
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { HashRouter as Router, Route } from 'react-router-dom'
+import Home from './components/Home';
+import Profile from './components/Profile';
+import User from './components/User';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+ReactDOM.render(
+  <Router>
+    <Route path='/' component={Home} exact />
+    <Route path='/user' component={User} exact />
+    <Route path='/profile' component={Profile} exact />
+  </Router>
+  , document.getElementById('root')
+);
+```
 
-### Advanced Configuration
+#### 2.3.`component/User.js`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```react
+const User = () => {
+    return <div>User</div>
+}
+export default User;
+```
 
-### Deployment
+#### 2.4.`component/Home.js`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```react
+const Home = () => {
+    return <div>Home</div>
+}
+export default Home;
+```
 
-### `yarn build` fails to minify
+#### 2.5.`component/Profile.js`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```react
+const Profile = () => {
+    return <div>Profile</div>
+}
+export default Profile;
+```
+
