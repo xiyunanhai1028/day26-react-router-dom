@@ -7,7 +7,7 @@
  * @FilePath: /day26-react-router-dom/src/react-router-dom/HashRouter.js
  */
 import React from 'react';
-import { createHashHistory } from 'history';
+import { createHashHistory } from '../history';
 import { Router } from '../react-router';
 class HashRouter extends React.Component {
     history = createHashHistory();
