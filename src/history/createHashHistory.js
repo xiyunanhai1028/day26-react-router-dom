@@ -2,7 +2,7 @@
  * @Author: dfh
  * @Date: 2021-03-04 13:40:20
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-05 08:56:49
+ * @LastEditTime: 2021-03-05 17:43:52
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/history/createHashHistory.js
  */
@@ -12,7 +12,7 @@ function createHashHistory() {
     const historyStack = [];//历史栈
     let historyIndex = -1;//栈指针
     let state = undefined;//状态
-    window.addEventListener('hashchange', () => {
+    function hashchange() {
         const pathname = window.location.hash.slice(1);
         Object.assign(history, { action, location: { pathname, state } });
         if (!action || action === 'PUSH') {//首次或者push的时候进入
@@ -21,7 +21,8 @@ function createHashHistory() {
             historyStack[historyIndex] = history.location;
         }
         listeners.forEach(listen => listen(history.location))
-    })
+    }
+    window.addEventListener('hashchange', hashchange)
 
     function listen(listen) {
         listeners.push(listen);
@@ -92,8 +93,13 @@ function createHashHistory() {
         listen
     }
     action = 'PUSH';
-    //赋值默认路径
-    window.location.hash = window.location.hash.slice(1) || '/'
+    if (window.location.hash) {
+        hashchange()
+    } else {
+        //赋值默认路径
+        window.location.hash = '/'
+    }
+
     return history;
 }
 export default createHashHistory;

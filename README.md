@@ -307,13 +307,22 @@ export {default as createBrowserHistory} from './createBrowserHistory'
 #### 4.2.`createHashHistory.js`
 
 ```javascript
+/*
+ * @Author: dfh
+ * @Date: 2021-03-04 13:40:20
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-05 17:43:52
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/src/history/createHashHistory.js
+ */
 function createHashHistory() {
     const listeners = [];
     let action;
     const historyStack = [];//历史栈
     let historyIndex = -1;//栈指针
     let state = undefined;//状态
-    window.addEventListener('hashchange', () => {
+  	//提取出来，以便后面路径不变刷新时调用
+    function hashchange() {
         const pathname = window.location.hash.slice(1);
         Object.assign(history, { action, location: { pathname, state } });
         if (!action || action === 'PUSH') {//首次或者push的时候进入
@@ -322,7 +331,8 @@ function createHashHistory() {
             historyStack[historyIndex] = history.location;
         }
         listeners.forEach(listen => listen(history.location))
-    })
+    }
+    window.addEventListener('hashchange', hashchange)
 
     function listen(listen) {
         listeners.push(listen);
@@ -393,8 +403,13 @@ function createHashHistory() {
         listen
     }
     action = 'PUSH';
-    //赋值默认路径
-    window.location.hash = window.location.hash.slice(1) || '/'
+    if (window.location.hash) {
+        hashchange()
+    } else {
+        //赋值默认路径
+        window.location.hash = '/'
+    }
+
     return history;
 }
 export default createHashHistory;
@@ -525,13 +540,15 @@ function matchPath(pathname, options = {}) {
     }
 }
 
+let cache = {}
 function compilePath(path, options) {
+    const cacheKey = path + JSON.stringify(options);
+    if (cache[cacheKey]) return cache[cacheKey];
     const keys = [];//处理路径参数
     const regexp = PathToRegexp(path, keys, options);
-    return {
-        keys,
-        regexp
-    }
+    const result = { keys, regexp };
+    cache[cacheKey] = result;
+    return result
 }
 export default matchPath;
 ```
@@ -665,3 +682,6 @@ export default Route;
 + export { default as Switch } from './Switch';
 ```
 
+### 7.Redirect实现
+
+#### 7.1.
