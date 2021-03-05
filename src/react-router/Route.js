@@ -2,11 +2,12 @@
  * @Author: dfh
  * @Date: 2021-03-04 11:18:19
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-04 11:41:29
+ * @LastEditTime: 2021-03-05 14:08:42
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/react-router/Route.js
  */
 import React from 'react';
+import matchPath from './matchPath';
 import RouterContext from './RouterContext';
 /**
  * 1.获取context中的值
@@ -17,9 +18,9 @@ class Route extends React.Component {
     static contextType = RouterContext;
     render() {
         const { location, history } = this.context;
-        const { path, component: Component, exact } = this.props
-        const match = location.pathname === path;
-        const routeProps = { location, history };
+        const { component: Component } = this.props
+        const match = matchPath(location.pathname, this.props);
+        const routeProps = { location, history,match };
         return match ? <Component {...routeProps} /> : null
     }
 }

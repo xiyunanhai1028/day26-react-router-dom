@@ -155,3 +155,326 @@ const Profile = () => {
 export default Profile;
 ```
 
+### 3.基本实现
+
+```javascript
+├── react-router
+│   ├── Route.js
+│   ├── Router.js
+│   ├── RouterContext.js
+│   └── index.js
+└── react-router-dom
+    ├── BrowserRouter.js
+    ├── HashRouter.js
+    └── index.js
+```
+
+#### 3.1.`react-router-dom/index.js`
+
+```javascript
+export * from '../react-router';//把从react-dom导入的全部导出
+export { default as HashRouter } from './HashRouter'; //导入HashRouter，再导出
+export { default as BrowserRouter } from './BrowserRouter';//导入RrowserRouter，再导出
+```
+
+#### 3.2.`react-router-dom/HashRouter.js`
+
+```react
+import React from 'react';
+import { createHashHistory } from 'history';//目前引入的是库中的
+import { Router } from '../react-router';
+
+class HashRouter extends React.Component {
+    history = createHashHistory();
+    render() {
+        return (
+            <Router history={this.history}>
+                {this.props.children}
+            </Router>
+        )
+    }
+}
+export default HashRouter;
+```
+
+#### 3.3.`react-router-dom/BrowserRouter.js`
+
+```react
+import React from 'react';
+import { Router } from '../react-router';
+import { createBrowserHistory } from 'history';//目前引入的是库中的
+
+class BrowserRouter extends React.Component {
+    history = createBrowserHistory();
+    render() {
+        return (
+            <Router history={this.history}>
+                {this.props.children}
+            </Router>
+        )
+    }
+}
+export default BrowserRouter;
+```
+
+#### 3.4.`react-router/index.js`
+
+```javascript
+export {default as Router} from './Router';
+export {default as Route} from './Route';
+export {default as __RouterContext} from './RouterContext';
+```
+
+#### 3.5.`react-router/RouterContext.js`
+
+```javascript
+import React from 'react';
+export default React.createContext();
+```
+
+#### 3.6.`react-router/Router.js`
+
+```react
+import React from 'react';
+import RouterContext from './RouterContext';
+
+class Router extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            location: props.history.location
+        }
+        //监听路径变化
+        this.unlisten = props.history.listen(location => {
+            this.setState({location});
+        })
+    }
+
+    componentWillUnmount() {
+        this.unlisten();//销毁监听
+    }
+
+    render() {
+        const value = {//通过value向下层传递数据
+            location: this.state.location,//用来传递给Route判断路径是否匹配的
+            history: this.props.history//用来让组件跳转路径的
+        }
+        return (
+            <RouterContext.Provider value={value}>
+                {this.props.children}
+            </RouterContext.Provider>
+        )
+    }
+}
+export default Router;
+```
+
+#### 3.7.`react-router/Route.js`
+
+```react
+import React from 'react';
+import RouterContext from './RouterContext';
+
+class Route extends React.Component{
+  static contextType=RouterContext;
+
+	render(){
+    const {location,history}=this.context;
+    const {exact,component:Component,path}=this.props;
+    const match=location.pathname===path;
+    const routeProps={location,history};
+    return match?<Component {...routeProps}/> :null;
+  }
+}
+```
+
+### 4.history
+
+```javascript
+history
+├── createBrowserHistory.js
+├── createHashHistory.js
+└── index.js
+```
+
+#### 4.1.`history/index.js`
+
+```javascript
+export {default as createHashHistory} from './createHashHistory';
+export {default as createBrowserHistory} from './createBrowserHistory'
+```
+
+#### 4.2.`createHashHistory.js`
+
+```javascript
+function createHashHistory() {
+    const listeners = [];
+    let action;
+    const historyStack = [];//历史栈
+    let historyIndex = -1;//栈指针
+    let state = undefined;//状态
+    window.addEventListener('hashchange', () => {
+        const pathname = window.location.hash.slice(1);
+        Object.assign(history, { action, location: { pathname, state } });
+        if (!action || action === 'PUSH') {//首次或者push的时候进入
+            historyStack[++historyIndex] = history.location;
+        } else if (action === 'REPLACE') {//替换路由
+            historyStack[historyIndex] = history.location;
+        }
+        listeners.forEach(listen => listen(history.location))
+    })
+
+    function listen(listen) {
+        listeners.push(listen);
+        return () => {
+            const idx = listeners.indexOf(listen);
+            listeners.splice(idx, 1);//从找到位置删除
+        }
+    }
+
+    /**
+     * 两种情况 push('/',{})  push({pathname:'/',state:{}})
+     * @param {*} pathname 可能是字符串，也可能是对象
+     * @param {*} newState 状态
+     */
+    function push(pathname, newState) {
+        action = 'PUSH';
+        if (typeof pathname === 'object') {
+            state = pathname.state;
+            pathname = pathname.pathname;
+        } else {
+            state = newState;
+        }
+        //给hash赋值是不需要添加#，取得是带#
+        window.location.hash = pathname;
+    }
+
+    /**
+     * 两种情况 replace('/',{})  replace({pathname:'/',state:{}})
+     * @param {*} pathname 可能是字符串，也可能是对象
+     * @param {*} newState 状态
+     */
+    function replace(pathname, newState) {
+        action = 'REPLACE';
+        if (typeof pathname === 'object') {
+            state = pathname.state;
+            pathname = pathname.pathname;
+        } else {
+            state = newState;
+        }
+        window.location.hash = pathname;
+    }
+
+    function go(n) {
+        action = 'POP';
+        historyIndex += n;
+        const nextLocation = historyStack[historyIndex];
+        state = nextLocation.state;
+        window.location.hash = nextLocation.pathname;
+    }
+
+    function goBack() {
+        go(-1)
+    }
+
+    function goForward() {
+        action = 'POP'
+        go(1)
+    }
+
+    const history = {
+        action: 'POP',
+        location: { pathname: '/', state: undefined },
+        push,
+        replace,
+        go,
+        goForward,
+        goBack,
+        listen
+    }
+    action = 'PUSH';
+    //赋值默认路径
+    window.location.hash = window.location.hash.slice(1) || '/'
+    return history;
+}
+export default createHashHistory;
+```
+
+#### 4.3.`createBrowserHistory.js`
+
+```javascript
+function createBrowserHistory() {
+    const globalHistory = window.history;
+    const listeners = [];
+    let action;
+    let state;
+    function listen(listener) {
+        listeners.push(listener);
+        return () => {
+            const idx = listeners.indoxOf(listener);
+            listeners.splice(idx, 1);
+        }
+    }
+
+    //重新原生的pushState方法
+    function push(pathname, nextState) {
+        action = 'PUSH';
+        if (typeof pathname === 'object') {
+            state = pathname.state;
+            pathname = pathname.pathname;
+        } else {
+            state = nextState;
+        }
+
+        //调用原生方法
+        globalHistory.pushState(state, null, pathname);
+        const location = { state, pathname };
+        notify({ action, location });
+    }
+
+    function notify(newHistory) {
+        Object.assign(history, newHistory);
+        listeners.forEach(listen => listen(history.location));
+    }
+
+    //原生方法，回退/前进的时候这个方法会执行
+    window.onpopstate = event => {
+        notify({ action: 'POP', location: { pathname: window.location.pathname, state: globalHistory.state } })
+    }
+
+    function go(n) {
+        globalHistory.go(n)
+    }
+
+    function goBack() {
+        go(-1)
+    }
+
+    function goForward() {
+        go(1)
+    }
+
+    const history = {
+        action: 'POP',
+        location: { pathname: window.location.pathname, state: globalHistory.state },//刷新state不会丢失
+        go,
+        goBack,
+        goForward,
+        push,
+        listen,
+    }
+    return history;
+}
+
+export default createBrowserHistory;
+```
+
+### 5.path-to-regexp
+
+- [regulex](https://jex.im/regulex)
+- path-to-regexp
+  - sensitive 是否大小写敏感 (默认值: false)
+  - strict 是否允许结尾有一个可选的/ (默认值: false)
+  - end 是否匹配整个字符串 (默认值: true
+
+#### 
