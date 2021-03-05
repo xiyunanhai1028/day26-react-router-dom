@@ -2,7 +2,7 @@
  * @Author: dfh
  * @Date: 2021-03-05 13:50:11
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-05 14:25:12
+ * @LastEditTime: 2021-03-05 17:28:12
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/react-router/matchPath.js
  */
@@ -36,12 +36,14 @@ function matchPath(pathname, options = {}) {
     }
 }
 
+let cache = {}
 function compilePath(path, options) {
+    const cacheKey = path + JSON.stringify(options);
+    if (cache[cacheKey]) return cache[cacheKey];
     const keys = [];//处理路径参数
     const regexp = PathToRegexp(path, keys, options);
-    return {
-        keys,
-        regexp
-    }
+    const result = { keys, regexp };
+    cache[cacheKey] = result;
+    return result
 }
 export default matchPath;

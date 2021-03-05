@@ -612,6 +612,56 @@ export default Route;
 #### 6.1.`Switch.js`
 
 ```javascript
+import React from 'react';
+import matchPath from './matchPath';
+import RouterContext from './RouterContext';
+class Switch extends React.Component {
+    static contextType = RouterContext;
 
+    render() {
+        const { location } = this.context;
+        let element, match;
+        React.Children.forEach(this.props.children,child => {
+            if (!match && React.isValidElement(child)) {
+                match = matchPath(location.pathname, child.props);
+                element = child;
+            }
+        })
+        return match ? React.cloneElement(element, { computedMatch: match }) : null;
+    }
+}
+
+export default Switch;
+```
+
+#### 6.2.`Route.js`
+
+```javascript
+import React from 'react';
+import matchPath from './matchPath';
+import RouterContext from './RouterContext';
+
+class Route extends React.Component {
+    static contextType = RouterContext;
+    render() {
+        const { location, history } = this.context;
++       const { component: Component, computedMatch } = this.props;
++       //优化点，Switch判断过了，不用在判断
++       const match = computedMatch ? computedMatch : matchPath(location.pathname, this.props);
+        const routeProps = { location, history, match };
+        return match ? <Component {...routeProps} /> : null
+    }
+}
+export default Route;
+```
+
+#### 6.3.`index.js`
+
+```javascript
+	export { default as Router } from './Router';
+	export { default as Route } from './Route';
+	export { default as __RouterContext } from './RouterContext';
+	export { default as matchPath } from './matchPath';
++ export { default as Switch } from './Switch';
 ```
 
