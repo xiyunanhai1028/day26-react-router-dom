@@ -304,7 +304,7 @@ export {default as createHashHistory} from './createHashHistory';
 export {default as createBrowserHistory} from './createBrowserHistory'
 ```
 
-#### 4.2.`createHashHistory.js`
+#### 4.2.`history/createHashHistory.js`
 
 ```javascript
 /*
@@ -415,7 +415,7 @@ function createHashHistory() {
 export default createHashHistory;
 ```
 
-#### 4.3.`createBrowserHistory.js`
+#### 4.3.`history/createBrowserHistory.js`
 
 ```javascript
 function createBrowserHistory() {
@@ -626,7 +626,7 @@ export default Route;
 
 ### 6.Switch实现
 
-#### 6.1.`Switch.js`
+#### 6.1.`react-route/Switch.js`
 
 ```javascript
 import React from 'react';
@@ -651,7 +651,7 @@ class Switch extends React.Component {
 export default Switch;
 ```
 
-#### 6.2.`Route.js`
+#### 6.2.`react-route/Route.js`
 
 ```javascript
 import React from 'react';
@@ -672,7 +672,7 @@ class Route extends React.Component {
 export default Route;
 ```
 
-#### 6.3.`index.js`
+#### 6.3.`react-route/index.js`
 
 ```javascript
 	export { default as Router } from './Router';
@@ -684,4 +684,50 @@ export default Route;
 
 ### 7.Redirect实现
 
-#### 7.1.
+#### 7.1.`react-route/Lifecycle.js`
+
+```react
+import React from 'react';
+
+class LifeCycle extends React.Component {
+
+    componentDidMount() {
+        this.props.onMount && this.props.onMount();
+    }
+
+    componentWillUnmount() {
+        this.props.unMount && this.props.unMount();
+    }
+    render(){
+        return null;
+    }
+}
+export default LifeCycle;
+```
+
+#### 7.2.`react-route/Redirect.js`
+
+```javascript
+import React from 'react';
+import LifeCycle from './Lifecycle';
+import RouterContext from './RouterContext';
+
+const Redirect = ({to}) => {
+    return <RouterContext>{
+        value => <LifeCycle onMount={() =>value.history.push(to)} />
+    }</RouterContext>
+}
+export default Redirect;
+```
+
+#### 7.3.`react-route/index.js`
+
+```javascript
+export { default as Router } from './Router';
+export { default as Route } from './Route';
+export { default as __RouterContext } from './RouterContext';
+export { default as matchPath } from './matchPath';
+export { default as Switch } from './Switch';
++ export { default as Redirect } from './Redirect';
+```
+
