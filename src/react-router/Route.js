@@ -2,7 +2,7 @@
  * @Author: dfh
  * @Date: 2021-03-04 11:18:19
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-05 14:08:42
+ * @LastEditTime: 2021-03-05 16:39:42
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/react-router/Route.js
  */
@@ -18,9 +18,10 @@ class Route extends React.Component {
     static contextType = RouterContext;
     render() {
         const { location, history } = this.context;
-        const { component: Component } = this.props
-        const match = matchPath(location.pathname, this.props);
-        const routeProps = { location, history,match };
+        const { component: Component, computedMatch } = this.props;
+        //优化点，Switch判断过了，不用在判断
+        const match = computedMatch ? computedMatch : matchPath(location.pathname, this.props);
+        const routeProps = { location, history, match };
         return match ? <Component {...routeProps} /> : null
     }
 }

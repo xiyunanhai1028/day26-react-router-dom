@@ -2,7 +2,7 @@
  * @Author: dfh
  * @Date: 2021-03-05 13:50:11
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-05 14:07:00
+ * @LastEditTime: 2021-03-05 14:25:12
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/react-router/matchPath.js
  */
@@ -19,7 +19,7 @@ import PathToRegexp from 'path-to-regexp';
 function matchPath(pathname, options = {}) {
     const { path = '/', exact = false, strict = false, sensitive = false } = options;
     const { keys, regexp } = compilePath(path, { end: exact, strict, sensitive });
-    const match = regexp.exact(pathname);
+    const match = regexp.exec(pathname);
     if (!match) return null;
     const [url, ...values] = match;
     const isExact = pathname === url;

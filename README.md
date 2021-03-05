@@ -477,4 +477,141 @@ export default createBrowserHistory;
   - strict 是否允许结尾有一个可选的/ (默认值: false)
   - end 是否匹配整个字符串 (默认值: true
 
-#### 
+#### 5.1.使用
+
+```javascript
+const pathToRegexp = require('path-to-regexp');
+const keys = [];
+const path = '/user/:id/:name';
+const regexp = pathToRegexp(path, keys, { end: true });
+const [url, ...values] = regexp.exec('/user/123/zhangsan');
+const obj = keys.reduce((memo, key, index) => {
+    memo[key.name] = values[index];
+    return memo
+}, {})
+console.log(obj);//{ id: '123', name: 'zhangsan' }
+```
+
+#### 5.2.`react-router/matchPath.js`
+
+```javascript
+import PathToRegexp from 'path-to-regexp';
+
+/**
+ * 
+ * @param {*} pathname 浏览器当前的真实路径
+ * @param {*} options route组件的属性
+ *   exact 是否精确匹配 后面能不能跟子路径
+ *   strict 是否严格匹配 后面能不能有可选的/
+ *   sensitive 是否是大小写敏感 
+ */
+function matchPath(pathname, options = {}) {
+    const { path = '/', exact = false, strict = false, sensitive = false } = options;
+    const { keys, regexp } = compilePath(path, { end: exact, strict, sensitive });
+    const match = regexp.exec(pathname);
+    if (!match) return null;
+    const [url, ...values] = match;
+    const isExact = pathname === url;
+    //如果要求精确，但不精确，也返回null
+    if (exact && !isExact) return null;
+    return {
+        path,//来自route里的路径
+        url,//来自浏览器的地址
+        isExact,//是否精确匹配
+        params: keys.reduce((memo, key, index) => {//参数
+            memo[key.name] = values[index];
+            return memo;
+        }, {})
+    }
+}
+
+function compilePath(path, options) {
+    const keys = [];//处理路径参数
+    const regexp = PathToRegexp(path, keys, options);
+    return {
+        keys,
+        regexp
+    }
+}
+export default matchPath;
+```
+
+#### 5.3.`react-router/Router.js`
+
+```react
+import React from 'react';
+import RouterContext from './RouterContext';
+class Router extends React.Component {
+
++   static computeRootMatch(pathname) {
++       return { path: '/', url: '/', params: {}, isExact: pathname === '/' }
++   }
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            location: props.history.location
+        }
+        //监听路径变化
+        this.unlisten = props.history.listen(location => {
+            this.setState({ location });
+        })
+    }
+
+    componentWillUnmount() {
+        this.unlisten();//销毁监听
+    }
+
+    render() {
+        const value = {//通过value向下层传递数据
+            location: this.state.location,//用来传递给Route判断路径是否匹配的
+            history: this.props.history,//用来让组件跳转路径的
++           match: Router.computeRootMatch(this.state.location.pathname)
+        }
+        return (
+            <RouterContext.Provider value={value}>
+                {this.props.children}
+            </RouterContext.Provider>
+        )
+    }
+}
+export default Router;
+```
+
+#### 5.4.`react-router/Route.js`
+
+```react
+import React from 'react';
+import matchPath from './matchPath';
+import RouterContext from './RouterContext';
+
+class Route extends React.Component {
+    static contextType = RouterContext;
+    render() {
+        const { location, history } = this.context;
++       const { component: Component } = this.props
++       const match = matchPath(location.pathname, this.props);
++       const routeProps = { location, history,match };
+        return match ? <Component {...routeProps} /> : null
+    }
+}
+export default Route;
+```
+
+#### 5.5.`react-router/index.js`
+
+```javascript
+  export { default as Router } from './Router';
+  export { default as Route } from './Route';
+  export { default as __RouterContext } from './RouterContext';
++ export { default as matchPath } from './matchPath';
+```
+
+### 6.Switch实现
+
+#### 6.1.`Switch.js`
+
+```javascript
+
+```
+
