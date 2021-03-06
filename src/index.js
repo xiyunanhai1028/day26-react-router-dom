@@ -2,13 +2,13 @@
  * @Author: dfh
  * @Date: 2021-03-04 08:58:14
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-06 10:15:32
+ * @LastEditTime: 2021-03-06 11:03:43
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/index.js
  */
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { HashRouter as Router, Route, Switch, Redirect, Link } from './react-router-dom'
+import { HashRouter as Router, Route, Switch, Redirect, Link, NavLink } from './react-router-dom'
 import Home from './components/Home';
 import Profile from './components/Profile';
 import User from './components/User';
@@ -18,9 +18,9 @@ import Login from './components/Login';
 ReactDOM.render(
   <Router>
     <ul>
-      <li><Link to='/user'>user</Link></li>
-      <li><Link to='/'>Home</Link></li>
-      <li><Link to='/profile'>Profile</Link></li>
+      <li><NavLink to='/' exact className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>Home</NavLink></li>
+      <li><NavLink to='/user' className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>user</NavLink></li>
+      <li><NavLink to='/profile' className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>Profile</NavLink></li>
     </ul>
     <Switch>
       <Route path='/' component={Home} exact />

@@ -789,6 +789,8 @@ export default Link;
 
 ### 9.受保护路由
 
+![受保护路由](/Users/dufeihu/Documents/html/zhufeng/复习/day26-react-router-dom/受保护路由.gif)
+
 #### 9.1.`Login.js`
 
 ```react
@@ -867,6 +869,86 @@ ReactDOM.render(
 ```
 
 #### 9.4.`react-router/Route.js`
+
+> 指定一个Route组件要渲染的内容有三种方式：
+>
+> - 1.component属性，值是一个组件的类型，它不能写定义的逻辑
+> - 2.render属性，它是一个函数，如果路径匹配的话，就要渲染它这个函数的返回值
+> - 3.children属性，它也是一个函数，不管匹不匹配都渲染
+>
+> render和children的区别：
+>
+> - 1.render匹配才渲染，不匹配不渲染
+> - 2.children不管匹配不匹配都渲染
+
+```react
+import React from 'react';
+import matchPath from './matchPath';
+import RouterContext from './RouterContext';
+
+class Route extends React.Component {
+    static contextType = RouterContext;
+    render() {
+        const { location, history } = this.context;
++       const { component: Component, computedMatch, render } = this.props;
+        //优化点，Switch判断过了，不用在判断
+        const match = computedMatch ? computedMatch : matchPath(location.pathname, this.props);
+        const routeProps = { location, history, match };
++       let renderElement = null;
++       if (match) {
++           if (Component) {
++               renderElement = <Component {...routeProps} />;
++           } else if (render) {
++               renderElement = render(routeProps);
++           }
++       }
++       return renderElement;
+    }
+}
+export default Route;
+```
+
+### 10.NavLink
+
+#### 10.1.`index.html`
+
+```html
+<!--
+ * @Author: dfh
+ * @Date: 2021-03-04 08:58:14
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-06 10:47:53
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/public/index.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Web site created using create-react-app" />
+  <title>React App</title>
+  <style>
+    .strong {
+      font-size: 20px;
+    }
+
+    .active {
+      background-color: skyblue;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>
+```
+
+#### 10.2.`index.js`
 
 ```react
 
