@@ -628,7 +628,7 @@ export default Route;
 
 #### 6.1.`react-route/Switch.js`
 
-```javascript
+```react
 import React from 'react';
 import matchPath from './matchPath';
 import RouterContext from './RouterContext';
@@ -653,7 +653,7 @@ export default Switch;
 
 #### 6.2.`react-route/Route.js`
 
-```javascript
+```react
 import React from 'react';
 import matchPath from './matchPath';
 import RouterContext from './RouterContext';
@@ -707,7 +707,7 @@ export default LifeCycle;
 
 #### 7.2.`react-route/Redirect.js`
 
-```javascript
+```react
 import React from 'react';
 import LifeCycle from './Lifecycle';
 import RouterContext from './RouterContext';
@@ -729,5 +729,146 @@ export { default as __RouterContext } from './RouterContext';
 export { default as matchPath } from './matchPath';
 export { default as Switch } from './Switch';
 + export { default as Redirect } from './Redirect';
+```
+
+### 8.Link实现
+
+#### 8.1.事例
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
++import {HashRouter as Router,Route,Switch,Redirect,Link} from './react-router-dom';
+import Home from './components/Home';
+import User from './components/User';
+import Profile from './components/Profile';
+ReactDOM.render(
+    <Router>
++      <ul>
++          <li><Link to="/">首页</Link></li>
++          <li><Link to="/user" >用户管理</Link></li>
++          <li><Link to="/profile" >个人中心</Link></li>
++      </ul>
+        <Switch>
+          <Route path="/" component={Home} exact/>
+          <Route path="/user" component={User} />
+          <Route path="/profile" component={Profile}/>
+          <Redirect to="/"/>
+        </Switch>
+    </Router>
+,document.getElementById('root'));
+```
+
+
+
+#### 8.1.`react-router-dom/Link.js`
+
+```react
+import React from 'react';
+import { __RouterContext as RouterContext } from '../react-router';
+
+function Link(props) {
+    return <RouterContext.Consumer>{
+        ({ history }) => <a onClick={event => {
+            event.preventDefault();
+            history.push(props.to);
+        }} {...props}>{props.children}</a>
+    }</RouterContext.Consumer>
+}
+export default Link;
+```
+
+#### 8.2.`react-router-dom/index.js`
+
+```javascript
+	export * from '../react-router';//把从react-dom导入的全部导出
+	export { default as HashRouter } from './HashRouter'; //导入HashRouter，再导出
+	export { default as BrowserRouter } from './BrowserRouter';//导入RrowserRouter，再导出
++ export { default as Link } from './Link';//导入RrowserRouter，再导出
+```
+
+### 9.受保护路由
+
+#### 9.1.`Login.js`
+
+```react
+import React from 'react';
+function Login(props) {
+    const nameRef = React.useRef();
+    const pwdRef = React.useRef();
+
+    function submitHandler(event) {
+        event.preventDefault();
+        const state = props.location.state
+        let to = '/'
+        localStorage.setItem('login', JSON.stringify({
+            username: nameRef.current.value,
+            password: pwdRef.current.value
+        }))
+        if (state) {
+            to = state.from;
+        }
+        props.history.push(to);
+    }
+    return <form>
+        <input type="text" ref={nameRef} placeholder='请输入用户名' /> <br />
+        <input type="password" ref={pwdRef} placeholder='请输入秘密' />
+        <button onClick={submitHandler}>登陆</button>
+    </form>
+}
+export default Login;
+```
+
+#### 9.2.`Protected.js`
+
+```react
+import { Route, Redirect } from '../react-router-dom'
+function Protected(props) {
+    const { path, component: Component } = props
+    return <Route path={path} render={
+        routeProps => {
+            const login = localStorage.getItem('login');
+            return login ? <Component {...routeProps} /> : <Redirect to={{ pathname: '/login', state: { from: path } }} />
+        }
+    } />
+}
+export default Protected;
+```
+
+#### 9.3.`index.js`
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { HashRouter as Router, Route, Switch, Redirect, Link } from './react-router-dom'
+import Home from './components/Home';
+import Profile from './components/Profile';
+import User from './components/User';
+import Protected from './components/Protected';
+import Login from './components/Login';
+
+ReactDOM.render(
+  <Router>
+    <ul>
+      <li><Link to='/user'>user</Link></li>
+      <li><Link to='/'>Home</Link></li>
+      <li><Link to='/profile'>Profile</Link></li>
+    </ul>
+    <Switch>
+      <Route path='/' component={Home} exact />
+      <Route path='/user' component={User} />
+      <Protected path='/profile' component={Profile} />
+      <Route path='/login' component={Login} />
+      <Redirect to='/' />
+    </Switch>
+  </Router>
+  , document.getElementById('root')
+);
+```
+
+#### 9.4.`react-router/Route.js`
+
+```react
+
 ```
 
