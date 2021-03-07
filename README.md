@@ -900,6 +900,12 @@ class Route extends React.Component {
 +               renderElement = <Component {...routeProps} />;
 +           } else if (render) {
 +               renderElement = render(routeProps);
++           } else if (children) {
++               renderElement = children(routeProps)
++           }
++       } else {
++           if (children) {
++               renderElement = children(routeProps)
 +           }
 +       }
 +       return renderElement;
@@ -909,6 +915,8 @@ export default Route;
 ```
 
 ### 10.NavLink
+
+![NavLink演示图](/Users/dufeihu/Documents/html/zhufeng/复习/day26-react-router-dom/NavLink演示图.gif)
 
 #### 10.1.`index.html`
 
@@ -951,6 +959,194 @@ export default Route;
 #### 10.2.`index.js`
 
 ```react
+/*
+ * @Author: dfh
+ * @Date: 2021-03-04 08:58:14
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-06 11:03:43
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/src/index.js
+ */
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { HashRouter as Router, Route, Switch, Redirect, Link, NavLink } from './react-router-dom'
+import Home from './components/Home';
+import Profile from './components/Profile';
+import User from './components/User';
+import Protected from './components/Protected';
+import Login from './components/Login';
 
+ReactDOM.render(
+  <Router>
+    <ul>
+      <li><NavLink to='/' exact className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>Home</NavLink></li>
+      <li><NavLink to='/user' className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>user</NavLink></li>
+      <li><NavLink to='/profile' className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>Profile</NavLink></li>
+    </ul>
+    <Switch>
+      <Route path='/' component={Home} exact />
+      <Route path='/user' component={User} />
+      <Protected path='/profile' component={Profile} />
+      <Route path='/login' component={Login} />
+      <Redirect to='/' />
+    </Switch>
+  </Router>
+  , document.getElementById('root')
+);
+```
+
+#### 10.3.`react-router-dom/NavLink.js`
+
+```react
+/*
+ * @Author: dfh
+ * @Date: 2021-03-06 10:48:19
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-06 11:02:09
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/src/react-router-dom/NavLink.js
+ */
+import React from 'react';
+import { Link } from './'
+import { __RouterContext as RouterContext, matchPath } from '../react-router'
+function NavLink(props) {
+    const context = React.useContext(RouterContext);
+    const { pathname } = context.location;//输入栏的路径
+    const {
+        to,//指定的路径
+        className: classNameProps = '',//自定义类名
+        activeClassName = 'active',//激活状态下的类名
+        style: styleProps = {},//普通样式
+        activeStyle = {},//激活下的样式
+        children,
+        exact
+    } = props;
+    //判断输入地址和指定地址
+    const isActive = matchPath(pathname, { path: to, exact });
+    const className = isActive ? joinClassNames(classNameProps, activeClassName) : classNameProps;
+    const style = isActive ? { ...styleProps, ...activeStyle } : styleProps;
+    const linkProps = {
+        className,
+        style,
+        children,
+        to
+    }
+    return <Link {...linkProps} />
+}
+
+//合并类名
+function joinClassNames(...classNames) {
+    //filter过滤掉null,undefined,'',然后在空格连接
+    return classNames.filter(c => c).join(' ');
+}
+export default NavLink;
+```
+
+#### 10.4.`react-router-dom/index.js`
+
+```javascript
+	export * from '../react-router';//把从react-dom导入的全部导出
+	export { default as HashRouter } from './HashRouter'; //导入HashRouter，再导出
+	export { default as BrowserRouter } from './BrowserRouter';//导入RrowserRouter，再导出
+	export { default as Link } from './Link';
++ export { default as NavLink } from './NavLink';
+```
+
+### 11.withRouter
+
+#### 11.1.`react-router/withRouter.js`
+
+```react
+import RouterContext from './RouterContext';
+function withRouter(OldComponent) {
+    return props => <RouterContext.Consumer>{//value={history,loaction,match}
+        value => <OldComponent {...props} {...value} />
+    }</RouterContext.Consumer>
+}
+export default withRouter;
+```
+
+### 12.Hooks
+
+![hooks](/Users/dufeihu/Documents/html/zhufeng/复习/day26-react-router-dom/hooks.gif)
+
+#### 12.1.`src/index.js`
+
+```react
+/*
+ * @Author: dfh
+ * @Date: 2021-03-04 08:58:14
+ * @LastEditors: dfh
+ * @LastEditTime: 2021-03-07 10:47:03
+ * @Modified By: dfh
+ * @FilePath: /day26-react-router-dom/src/index.js
+ */
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter, Route, Link, useParams, useHistory, useLocation, useRouteMatch } from './react-router-dom';
+
+function Home() {
+  return <div>首页</div>
+}
+
+function UserDetail() {
+  const params = useParams();
+  console.log('params--',params)
+  const history = useHistory();
+  console.log('history', history);
+  const location = useLocation();
+  return <div>User id:{params.id} <br /> name:{location.state.name}</div>
+}
+
+function Post() {
+  const match = useRouteMatch({
+    path: '/post/:id',
+    strict: true,
+    sensitive: true
+  })
+  return match ? <div>id:{match.params.id}</div> : <div>Not Found</div>
+}
+
+ReactDOM.render(<BrowserRouter>
+  <div>
+    <ul>
+      <li><Link to='/'>首页</Link></li>
+      <li><Link to={{ pathname: '/user/detail/1', state: { id: 1, name: '张三' } }}>张三用户</Link></li>
+      <li><Link to='/post/1'>张三详情</Link></li>
+    </ul>
+    <Route path='/' component={Home} />
+    <Route path='/user/detail/:id' component={UserDetail} />
+    <Route path='/post/:id' component={Post} />
+  </div>
+</BrowserRouter>, document.getElementById('root'))
+
+```
+
+#### 12.2.`react-router/hooks.js`
+
+```javascript
+import React from 'react';
+import RouterContext from './RouterContext';
+import matchPath from './matchPath';
+
+export function useParams() {
+    const match = React.useContext(RouterContext).match;
+    debugger
+    return match ? match.params : {};
+}
+
+export function useLocation() {
+    return React.useContext(RouterContext).location;
+}
+
+export function useHistory() {
+    return React.useContext(RouterContext).history;
+}
+
+export function useRouteMatch(options) {
+    const location = useLocation();//获取当前的路径pathname
+    const match = React.useContext(RouterContext).match;//获取匹配结果
+    return options ? matchPath(location.pathname, options) : match;
+}
 ```
 

@@ -2,33 +2,45 @@
  * @Author: dfh
  * @Date: 2021-03-04 08:58:14
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-06 11:03:43
+ * @LastEditTime: 2021-03-07 10:47:03
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/index.js
  */
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { HashRouter as Router, Route, Switch, Redirect, Link, NavLink } from './react-router-dom'
-import Home from './components/Home';
-import Profile from './components/Profile';
-import User from './components/User';
-import Protected from './components/Protected';
-import Login from './components/Login';
+import { BrowserRouter, Route, Link, useParams, useHistory, useLocation, useRouteMatch } from './react-router-dom';
 
-ReactDOM.render(
-  <Router>
+function Home() {
+  return <div>首页</div>
+}
+
+function UserDetail() {
+  const params = useParams();
+  console.log('params--',params)
+  const history = useHistory();
+  console.log('history', history);
+  const location = useLocation();
+  return <div>User id:{params.id} <br /> name:{location.state.name}</div>
+}
+
+function Post() {
+  const match = useRouteMatch({
+    path: '/post/:id',
+    strict: true,
+    sensitive: true
+  })
+  return match ? <div>id:{match.params.id}</div> : <div>Not Found</div>
+}
+
+ReactDOM.render(<BrowserRouter>
+  <div>
     <ul>
-      <li><NavLink to='/' exact className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>Home</NavLink></li>
-      <li><NavLink to='/user' className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>user</NavLink></li>
-      <li><NavLink to='/profile' className="strong" style={{ textDecoration: 'line-through' }} activeStyle={{ color: 'red' }}>Profile</NavLink></li>
+      <li><Link to='/'>首页</Link></li>
+      <li><Link to={{ pathname: '/user/detail/1', state: { id: 1, name: '张三' } }}>张三用户</Link></li>
+      <li><Link to='/post/1'>张三详情</Link></li>
     </ul>
-    <Switch>
-      <Route path='/' component={Home} exact />
-      <Route path='/user' component={User} />
-      <Protected path='/profile' component={Profile} />
-      <Route path='/login' component={Login} />
-      <Redirect to='/' />
-    </Switch>
-  </Router>
-  , document.getElementById('root')
-);
+    <Route path='/' component={Home} />
+    <Route path='/user/detail/:id' component={UserDetail} />
+    <Route path='/post/:id' component={Post} />
+  </div>
+</BrowserRouter>, document.getElementById('root'))

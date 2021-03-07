@@ -2,7 +2,7 @@
  * @Author: dfh
  * @Date: 2021-03-04 11:18:19
  * @LastEditors: dfh
- * @LastEditTime: 2021-03-06 10:13:35
+ * @LastEditTime: 2021-03-07 10:11:48
  * @Modified By: dfh
  * @FilePath: /day26-react-router-dom/src/react-router/Route.js
  */
@@ -18,7 +18,7 @@ class Route extends React.Component {
     static contextType = RouterContext;
     render() {
         const { location, history } = this.context;
-        const { component: Component, computedMatch, render } = this.props;
+        const { component: Component, computedMatch, render, children } = this.props;
         //优化点，Switch判断过了，不用在判断
         const match = computedMatch ? computedMatch : matchPath(location.pathname, this.props);
         const routeProps = { location, history, match };
@@ -28,6 +28,12 @@ class Route extends React.Component {
                 renderElement = <Component {...routeProps} />;
             } else if (render) {
                 renderElement = render(routeProps);
+            } else if (children) {
+                renderElement = children(routeProps)
+            }
+        } else {
+            if (children) {
+                renderElement = children(routeProps)
             }
         }
         return renderElement;
